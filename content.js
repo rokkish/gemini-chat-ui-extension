@@ -1,103 +1,100 @@
-// UIの構築
-const box = document.createElement('div');
-box.id = 'gemini-history-box';
+(function() {
+  // --- 1. UIの生成 ---
+  const box = document.createElement('div');
+  box.id = 'gemini-history-box';
 
-const header = document.createElement('div');
-header.id = 'gemini-history-header';
+  const header = document.createElement('div');
+  header.id = 'gemini-history-header';
+  header.innerHTML = `<span>History Graph</span><span id="min-toggle">−</span>`;
 
-const title = document.createElement('span');
-title.innerText = 'History Graph';
+  const toolbar = document.createElement('div');
+  toolbar.id = 'gemini-width-toolbar';
 
-const toggleBtn = document.createElement('span');
-toggleBtn.innerText = '−';
-toggleBtn.style.fontSize = '16px';
+  const widthConfigs = [
+    { label: '><', class: 'w-normal' },
+    { label: '<>', class: 'w-80' },
+    { label: '<<>>', class: 'w-100' }
+  ];
 
-header.appendChild(title);
-header.appendChild(toggleBtn);
-
-const content = document.createElement('div');
-content.id = 'gemini-history-content';
-
-box.appendChild(header);
-box.appendChild(content);
-document.body.appendChild(box);
-
-// 最小化/最大化の切り替え処理
-let isMinimized = false;
-header.addEventListener('click', () => {
-  isMinimized = !isMinimized;
-  content.classList.toggle('minimized', isMinimized);
-  toggleBtn.innerText = isMinimized ? '＋' : '−';
-  
-  header.style.borderRadius = isMinimized ? '8px' : '8px 8px 0 0';
-});
-
-// 重複追加を防ぐためのSet
-const processedNodes = new Set();
-
-// 履歴を更新する関数
-function updateHistory() {
-  const queries = document.querySelectorAll('.query-text');
-  
-  queries.forEach((query) => {
-    if (!processedNodes.has(query)) {
-      processedNodes.add(query);
-      
-      const item = document.createElement('div');
-      item.className = 'history-item';
-      
-      const dot = document.createElement('div');
-      dot.className = 'history-dot';
-      
-      const text = document.createElement('div');
-      text.className = 'history-text';
-      
-      // ==========================================
-      // 修正箇所: cdk-visually-hidden を除外するロジック
-      // ==========================================
-      // 元のDOMに影響を与えないようノードを複製
-      const clone = query.cloneNode(true);
-      
-      // クラス名または属性に cdk-visually-hidden を持つ要素をすべて取得して削除
-      const hiddenElements = clone.querySelectorAll('.cdk-visually-hidden, [cdk-visually-hidden]');
-      hiddenElements.forEach(el => el.remove());
-      
-      // DOMにアタッチされていない複製ノードからテキストを取得するため、innerText ではなく textContent を使用
-      const fullText = clone.textContent.trim().replace(/\s+/g, ' ');
-      // ==========================================
-      
-      text.innerText = fullText.substring(0, 15) + (fullText.length > 15 ? '...' : '');
-      
-      item.appendChild(dot);
-      item.appendChild(text);
-      
-      // クリックイベント: 対象の発言へスクロール
-      item.addEventListener('click', () => {
-        query.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        const originalBg = query.style.backgroundColor;
-        query.style.transition = 'background-color 0.5s';
-        query.style.backgroundColor = 'rgba(138, 180, 248, 0.3)';
-        setTimeout(() => {
-          query.style.backgroundColor = originalBg;
-        }, 1500);
-      });
-      
-      content.appendChild(item);
-    }
+  widthConfigs.forEach(cfg => {
+    const btn = document.createElement('button');
+    btn.className = 'width-btn';
+    btn.innerText = cfg.label;
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      document.body.classList.remove('w-80', 'w-100');
+      if (cfg.class !== 'w-normal') document.body.classList.add(cfg.class);
+    };
+    toolbar.appendChild(btn);
   });
-  
-  if (content.scrollHeight > content.clientHeight) {
-    content.scrollTop = content.scrollHeight;
+
+  const content = document.createElement('div');
+  content.id = 'gemini-history-content';
+
+  box.appendChild(header);
+  box.appendChild(toolbar);
+  box.appendChild(content);
+  document.body.appendChild(box);
+
+  // --- 2. 最小化/最大化ロジック ---
+  let isMinimized = false;
+  header.addEventListener('click', () => {
+    isMinimized = !isMinimized;
+    content.classList.toggle('minimized', isMinimized);
+    toolbar.classList.toggle('minimized', isMinimized);
+    document.getElementById('min-toggle').innerText = isMinimized ? '＋' : '−';
+  });
+
+  // --- 3. 履歴抽出と更新ロジック ---
+  const processedNodes = new Set();
+
+  function updateHistory() {
+    const queries = document.querySelectorAll('.query-text');
+    
+    queries.forEach((query) => {
+      if (!processedNodes.has(query)) {
+        processedNodes.add(query);
+        
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        
+        const dot = document.createElement('div');
+        dot.className = 'history-dot';
+        
+        const text = document.createElement('div');
+        text.className = 'history-text';
+        
+        // cdk-visually-hidden を除外してテキストを抽出
+        const clone = query.cloneNode(true);
+        const hiddenElements = clone.querySelectorAll('.cdk-visually-hidden, [cdk-visually-hidden]');
+        hiddenElements.forEach(el => el.remove());
+        
+        // 15文字抽出
+        const rawText = clone.textContent.trim().replace(/\s+/g, ' ');
+        text.innerText = rawText.substring(0, 15) + (rawText.length > 15 ? '...' : '');
+        
+        item.appendChild(dot);
+        item.appendChild(text);
+        
+        // クリックで該当箇所へスクロール
+        item.addEventListener('click', () => {
+          query.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 一時的にハイライト
+          query.style.outline = '2px solid #8ab4f8';
+          query.style.borderRadius = '4px';
+          setTimeout(() => { query.style.outline = 'none'; }, 2000);
+        });
+        
+        content.appendChild(item);
+        
+        // 自動スクロール（履歴ボックス内）
+        content.scrollTop = content.scrollHeight;
+      }
+    });
   }
-}
 
-// 初回ロード時のチェック
-updateHistory();
-
-// チャットが動的に追加された時の監視設定
-const observer = new MutationObserver((mutations) => {
+  // --- 4. 監視の開始 ---
   updateHistory();
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
+  const observer = new MutationObserver(() => updateHistory());
+  observer.observe(document.body, { childList: true, subtree: true });
+})();

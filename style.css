@@ -1,93 +1,106 @@
-/* History Box の全体コンテナ */
+/* メインボックス */
 #gemini-history-box {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 220px;
-  max-height: 50vh;
+  width: 240px;
+  max-height: 60vh;
   background: #1e1f20;
   color: #e3e3e3;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   border: 1px solid #444;
-  z-index: 99999;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
-  font-family: sans-serif;
+  font-family: 'Google Sans', sans-serif;
+  overflow: hidden;
 }
 
-/* ヘッダー部（-ボタン含む） */
+/* ヘッダー */
 #gemini-history-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
+  padding: 12px 16px;
   background: #2a2b2c;
-  border-radius: 8px 8px 0 0;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 13px;
+  border-bottom: 1px solid #444;
 }
+#gemini-history-header:hover { background: #353638; }
 
-#gemini-history-header:hover {
-  background: #353638;
+/* 幅調整ツールバー */
+#gemini-width-toolbar {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 8px;
+  background: #202122;
+  border-bottom: 1px solid #333;
 }
+.width-btn {
+  background: #3c4043;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.width-btn:hover { background: #4f5256; }
 
-/* 履歴リストのコンテナ */
+/* 履歴リスト */
 #gemini-history-content {
   overflow-y: auto;
-  padding: 15px;
-  position: relative;
+  padding: 16px;
+  flex-grow: 1;
 }
+.minimized { display: none !important; }
 
-/* 最小化用のクラス */
-#gemini-history-content.minimized {
-  display: none;
-}
-
-/* 各履歴アイテム */
+/* Gitグラフ風デザイン */
 .history-item {
   display: flex;
-  align-items: center;
-  margin-bottom: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
   cursor: pointer;
   position: relative;
 }
-
-.history-item:last-child {
-  margin-bottom: 0;
-}
-
-/* Gitグラフの縦線 */
 .history-item::before {
   content: "";
   position: absolute;
   left: 5px;
-  top: 16px;
-  bottom: -24px;
+  top: 14px;
+  bottom: -22px;
   width: 2px;
   background: #8ab4f8;
 }
-.history-item:last-child::before {
-  display: none; /* 最後の要素は線を消す */
-}
+.history-item:last-child::before { display: none; }
 
-/* Gitグラフの丸（ノード） */
 .history-dot {
   width: 12px;
   height: 12px;
   background: #8ab4f8;
   border-radius: 50%;
   margin-right: 12px;
+  margin-top: 2px;
+  flex-shrink: 0;
   z-index: 1;
 }
-
-/* 抽出したテキスト */
 .history-text {
   font-size: 13px;
-  line-height: 1.2;
+  color: #c4c7c5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.history-item:hover .history-text {
-  text-decoration: underline;
-  color: #fff;
+.history-item:hover .history-text { color: #fff; text-decoration: underline; }
+
+/* Geminiの画面幅を上書きする設定 */
+/* セレクタはGeminiの内部構造に合わせて広めに適用 */
+body.w-80 .chat-view, body.w-80 main, body.w-80 .conversation-container, body.w-80 .input-area-container {
+  max-width: 80% !important;
+}
+body.w-100 .chat-view, body.w-100 main, body.w-100 .conversation-container, body.w-100 .input-area-container {
+  max-width: 96% !important;
 }
