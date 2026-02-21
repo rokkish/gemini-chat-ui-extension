@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini History Graph",
+  "version": "1.0",
+  "description": "Geminiのチャット履歴を右下にGitグラフ風に表示し、クリックでジャンプできるようにします。",
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "css": ["style.css"],
+      "js": ["content.js"]
+    }
+  ]
+}
