@@ -2,7 +2,7 @@
 
   const STORAGE_KEY_PREFIX = "chat_history_";
   let currentChatId = getChatId();
-  let historyMap = new Map(); // messageId -> { text, element }
+  let historyMap = new Map(); // messageId -> { text, element } ※sortedで再代入あり
 
   createUI();
   observeMessages();
@@ -68,7 +68,21 @@
       }
     });
 
-    if (updated) renderHistory();
+    if (updated) {
+      // DOM順（チャットの表示順）にソートして正しい順序を保証する
+      const sorted = new Map(
+        Array.from(historyMap.entries()).sort((a, b) => {
+          const elA = a[1].element;
+          const elB = b[1].element;
+          const pos = elA.compareDocumentPosition(elB);
+          if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+          if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+          return 0;
+        })
+      );
+      historyMap = sorted;
+      renderHistory();
+    }
   }
 
   function renderHistory() {

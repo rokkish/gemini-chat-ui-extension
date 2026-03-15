@@ -64,6 +64,7 @@
       }
     }
 
+    let updated = false;
     currentQueries.forEach((query) => {
       if (!processedNodes.some(item => item.node === query)) {
         const rawText = getCleanText(query);
@@ -74,11 +75,21 @@
           text: rawText.substring(0, 15) + (rawText.length > 15 ? '...' : '')
         };
         processedNodes.push(itemObj);
-        
-        // 全体を再描画してインデックス（0, 1, 2...）を更新
-        renderAllItems();
+        updated = true;
       }
     });
+
+    if (updated) {
+      // DOM順（チャットの表示順）にソートして正しい順序を保証する
+      processedNodes.sort((a, b) => {
+        const pos = a.node.compareDocumentPosition(b.node);
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+        if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+        return 0;
+      });
+      // 全体を再描画してインデックス（0, 1, 2...）を更新
+      renderAllItems();
+    }
   }
 
   // リストを再描画する関数
